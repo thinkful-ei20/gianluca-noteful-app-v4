@@ -33,12 +33,16 @@ app.use(express.static('public'));
 // Parse request body
 app.use(express.json());
 
-// Mount routers
+// Mount Authentication routes
+app.use('/api/users', usersRouter);
+app.use('/api', authRouter);
+
+// Mount authenticated user routes
+app.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
+
 app.use('/api/notes', notesRouter);
 app.use('/api/folders', foldersRouter);
 app.use('/api/tags', tagsRouter);
-app.use('/api/users', usersRouter);
-app.use('/api', authRouter);
 
 // Catch-all 404
 app.use(function (req, res, next) {

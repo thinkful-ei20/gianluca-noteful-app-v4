@@ -4,9 +4,10 @@ const mongoose = require('mongoose');
 
 const noteSchema = mongoose.Schema({
 	title: { type: String, required: true },
-	content: String,
+	content: { type: String},
 	folderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Folder' },
-	tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }]
+	tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
+	userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User'}
 }, { timestamps: true});
 
 

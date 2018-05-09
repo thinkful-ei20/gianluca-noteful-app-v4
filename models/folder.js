@@ -3,8 +3,11 @@
 const mongoose = require('mongoose');
 
 const folderSchema = mongoose.Schema({
-	name: { type: String, unique: true }
+	name: { type: String, required: true },
+	userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
+
+folderSchema.index({ name: 1, userId: 1}, { unique: true });
 
 folderSchema.set('toObject', {
 	transform: function (doc, ret) {

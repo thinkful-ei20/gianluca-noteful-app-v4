@@ -4,15 +4,40 @@ const router = express.Router();
 const mongoose = require('mongoose');
 
 const Note = require('../models/note');
+const Folder = require('../models/folder');
+const Tag = require('../models/tag');
 
-const passport = require('passport');
-router.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
+/* ======== Validate ID's ======== */
+
+function validateFolderId(folderId, userId) {
+	if(!folderId) {
+		return Promise.resolve();
+	}
+	return Folder.findOne({_id: folderId, userId})
+		.then(result => {
+			if(!result) {
+				return Promise.reject('Invalid Folder');
+			}
+		});
+}
+
+function validateTagIds(tags, userId) {
+	if (!tags) {
+		return Promise.resolve();
+	}
+	return Tag.find({ $and: [{ _id: { $in: tags }, userId }] })
+		.then(results => {
+			if (tags.length !== results.length) {
+				return Promise.reject('Invalid Tag');
+			}
+		});
+}
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-	const { searchTerm, folderId, tagId } = req.query;
 
-	let filter = {};
+	const { searchTerm, folderId, tagId } = req.query;
+	const filter = {};
 
 	if (searchTerm) {
 		// filter.title = { $regex: searchTerm };
@@ -27,6 +52,8 @@ router.get('/', (req, res, next) => {
 		filter.tags = tagId;
 	}
 
+	filter.userId = req.user.id;
+
 	Note.find(filter)
 		.populate('tags')
 		.sort({ 'updatedAt': 'desc' })
@@ -40,7 +67,9 @@ router.get('/', (req, res, next) => {
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
+
 	const { id } = req.params;
+	const userId = req.user.id;
 
 	if (!mongoose.Types.ObjectId.isValid(id)) {
 		const err = new Error('The `id` is not valid');
@@ -48,7 +77,7 @@ router.get('/:id', (req, res, next) => {
 		return next(err);
 	}
 
-	Note.findById(id)
+	Note.findOne({_id: id, userId})
 		.populate('tags')
 		.then(result => {
 			if (result) {
@@ -64,7 +93,9 @@ router.get('/:id', (req, res, next) => {
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
+
 	const { title, content, folderId, tags = [] } = req.body;
+	const userId = req.user.id;
 
 	/***** Never trust users - validate input *****/
 	if (!title) {
@@ -89,7 +120,13 @@ router.post('/', (req, res, next) => {
 		});
 	}
 
-	Note.create({ title, content, folderId, tags })
+	const folderIdPromise = validateFolderId(folderId, userId);
+	const tagsIdPromise = validateTagIds(tags, userId);
+
+	Promise.all([folderIdPromise, tagsIdPromise])
+		.then(() => {
+			return Note.create({ title, content, folderId, tags, userId });
+		})
 		.then(result => {
 			res
 				.location(`${req.originalUrl}/${result.id}`)
@@ -97,14 +134,24 @@ router.post('/', (req, res, next) => {
 				.json(result);
 		})
 		.catch(err => {
+			if(err === 'Invalid Folder') {
+				err = new Error('The folder is not valid');
+				err.status = 400;
+			}
+			if(err === 'Invalid Tag') {
+				err = new Error('The tag is not valid');
+				err.status = 400;
+			}
 			next(err);
 		});
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
+
 	const { id } = req.params;
 	const { title, content, folderId, tags = [] } = req.body;
+	const userId = req.user.id;
 
 	/***** Never trust users - validate input *****/
 	if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -135,7 +182,13 @@ router.put('/:id', (req, res, next) => {
 		});
 	}
 
-	Note.findByIdAndUpdate(id, { title, content, folderId, tags }, { new: true })
+	const folderIdPromise = validateFolderId(folderId, userId);
+	const tagsIdPromise = validateTagIds(tags, userId);
+
+	Promise.all([folderIdPromise, tagsIdPromise])
+		.then(() => {
+			return Note.findOneAndUpdate({_id: id, userId}, { title, content, folderId, tags }, { new: true })
+		})
 		.then(result => {
 			if (result) {
 				res.json(result);
@@ -144,15 +197,25 @@ router.put('/:id', (req, res, next) => {
 			}
 		})
 		.catch(err => {
+			if(err === 'Invalid Folder') {
+				err = new Error('The folder is not valid');
+				err.status = 400;
+			}
+			if(err === 'Invalid Tag') {
+				err = new Error('The tag is not valid');
+				err.status = 400;
+			}
 			next(err);
 		});
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
-	const { id } = req.params;
 
-	Note.findByIdAndRemove(id)
+	const { id } = req.params;
+	const userId = req.user.id;
+
+	Note.findOneAndRemove({_id: id, userId})
 		.then(() => {
 			res.status(204).end();
 		})
