@@ -1,10 +1,11 @@
 
 const express = require('express');
-const mongoose = require('mongoose');
-
 const router = express.Router();
 
-const { User } = require('../models/user');
+const User = require('../models/user');
+
+// const passport = require('passport');
+// router.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
 
 /* why use this instead of app.use(express.json()); ??*/
 //router.use(bodyParser.json());

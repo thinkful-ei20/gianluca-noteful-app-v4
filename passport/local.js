@@ -1,8 +1,9 @@
 const { Strategy: LocalStrategy } = require('passport-local');
-const { User } = require('../models/user');
+const User = require('../models/user');
 
 // ===== Define and create basicStrategy =====
 const localStrategy = new LocalStrategy((username, password, done) => {
+	console.log(username, password);
 	let user;
 	User.findOne({ username })
 		.then(results => {
