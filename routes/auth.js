@@ -22,7 +22,7 @@ router.post('/login', localAuth, function(req, res) {
 	return res.json({authToken});
 });
 
-const jwtAuth = passport.authenticate('local', options);
+const jwtAuth = passport.authenticate('jwt', options);
 
 router.post('/refresh', jwtAuth, function(req, res) {
 	const authToken = createAuthToken(req.user);
