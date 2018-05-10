@@ -117,8 +117,10 @@ router.put('/:id', (req, res, next) => {
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
+
 	const { id } = req.params;
 	const userId = req.user.id;
+
 	const tagRemovePromise = Tag.findOneAndRemove({_id: id, userId});
 	// const tagRemovePromise = Tag.remove({ _id: id }); // NOTE **underscore** _id
 

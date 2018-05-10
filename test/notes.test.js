@@ -1,4 +1,5 @@
 
+require('dotenv').config();
 const app = require('../server');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -38,7 +39,9 @@ describe('Noteful API - Notes', function () {
 	});
 
 	describe('GET /api/notes', function () {
-
+		// const user = {username, fullname};
+		// const token = jwt.sign({user}, JWT_SECRET, {subject:username});
+		// const decoded = jwt.decode(token);
 		it('should return the correct number of Notes', function () {
 			return Promise.all([
 				Note.find(),

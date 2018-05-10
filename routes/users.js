@@ -20,12 +20,9 @@ router.post('/', (req, res, next) => {
 
 	/* Check if requried fields are in the request */
 	if(missingField) {
-		res.status(400).json({
-			code: 400,
-			reason: 'ValidationError',
-			message: 'Missing Field',
-			location: missingField
-		});
+		const err = new Error(`Missing field:'${missingField}' in request body`);
+		err.status = 422;
+		return next(err);
 	}
 
 	/* Check if request body contains appropriate data types  */
@@ -33,12 +30,9 @@ router.post('/', (req, res, next) => {
 	const nonStringField = stringFields.find( field => field in req.body && typeof req.body[field] !== 'string');
 
 	if(nonStringField) {
-		res.status(400).json({
-			code: 400,
-			reason: 'ValidationError',
-			message: 'Incorrect field type: expected string',
-			location: nonStringField
-		});
+		const err = new Error(`Incorrect field type: '${nonStringField}' expected string`);
+		err.status = 422;
+		return next(err);
 	}
 
 	/* Check that username and password fields are 'trimmed' */
@@ -46,12 +40,9 @@ router.post('/', (req, res, next) => {
 	const nonTrimmedField = trimmedFields.find(field => req.body[field].trim() !== req.body[field]);
 
 	if(nonTrimmedField) {
-		res.status(400).json({
-			code: 400,
-			reason: 'ValidationError',
-			message: 'Cannot start or end with whitespace',
-			location: nonTrimmedField
-		});
+		const err = new Error(`Cannot start or end field: '${nonTrimmedField}' with whitespace`);
+		err.status = 422;
+		return next(err);
 	}
 
 	const sizedFields = {
@@ -60,8 +51,6 @@ router.post('/', (req, res, next) => {
 		},
 		password: {
 			min: 8,
-			// bcrypt truncates after 72 characters, so let's not give the illusion
-			// of security by storing extra (unused) info
 			max: 72
 		}
 	};
@@ -101,12 +90,9 @@ router.post('/', (req, res, next) => {
 		.count()
 		.then(count => {
 			if (count > 0) {
-				// There is an existing user with the same username
+				//There is an existing user with the same username
 				return Promise.reject({
-					code: 422,
-					reason: 'ValidationError',
-					message: 'Username already taken',
-					location: 'username'
+					code: 11000,
 				});
 			}
 			// If there is no existing user, hash the password
@@ -124,7 +110,7 @@ router.post('/', (req, res, next) => {
 		})
 		.catch(err => {
 			if(err.code === 11000) {
-				err = new Error('The Usernam already exists');
+				err = new Error(`The 'username': ${username} already exists`);
 				err.status = 400;
 			}
 			next(err);

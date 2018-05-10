@@ -9,7 +9,7 @@
 	"main": "server.js",
 	"scripts": {
 		"start": "node server.js",
-		"test": "cross-env NODE_ENV=test mocha",
+		"test": "cross-env NODE_ENV=test mocha --timeout 5000",
 		"dev": "nodemon server.js"
 	},
 	"dependencies": {
