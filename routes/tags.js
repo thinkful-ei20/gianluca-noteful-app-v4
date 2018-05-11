@@ -122,8 +122,6 @@ router.delete('/:id', (req, res, next) => {
 	const userId = req.user.id;
 
 	const tagRemovePromise = Tag.findOneAndRemove({_id: id, userId});
-	// const tagRemovePromise = Tag.remove({ _id: id }); // NOTE **underscore** _id
-
 	const noteUpdatePromise = Note.updateMany(
 		{ 'tags': id, },
 		{ '$pull': { 'tags': id } }
