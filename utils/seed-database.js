@@ -1,4 +1,5 @@
 
+require('dotenv').config();
 const mongoose = require('mongoose');
 const { MONGODB_URI } = require('../config');
 
@@ -14,7 +15,10 @@ const seedTags = require('../db/seed/tags');
 
 /** TODO: update to generate `hashed` passwords */
 mongoose.connect(MONGODB_URI)
-	.then(() => mongoose.connection.db.dropDatabase())
+	.then(() => {
+		mongoose.connection.db.dropDatabase();
+		console.log(MONGODB_URI);
+	})
 	.then(() => Promise.all(seedUsers.map(user => User.hashPassword(user.password))))
 	.then(digest => {
 		seedUsers.forEach((user, i) => {
