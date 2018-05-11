@@ -13,7 +13,7 @@ const User = require('../models/user');
 const expect = chai.expect;
 chai.use(chaiHttp);
 
-describe.only('Noteful API - Login', function () {
+describe('Noteful API - Login', function () {
 
 	const fullname = 'Example User';
 	const username = 'exampleUser';
@@ -28,7 +28,6 @@ describe.only('Noteful API - Login', function () {
 		return User.hashPassword(password)
 			.then(digest => User.create({ fullname, username, password: digest }));
 	});
-
 
 	afterEach(function () {
 		return mongoose.connection.db.dropDatabase();
@@ -64,22 +63,24 @@ describe.only('Noteful API - Login', function () {
 				expect(res.body.message).to.be.equal('Bad Request');
 			});
 	});
+
 	it('Should reject requests with incorrect usernames',function () {
 		return chai.request(app)
 			.post('/api/login')
 			.send({ username: 'not_a_valid_username', password })
 			.then(res => {
 				expect(res).to.have.status(401);
-				expect(res.body.message).to.be.equal('Unauthorized');
+				expect(res.body.message).to.be.equal('Incorrect username');
 			});
 	});
+
 	it('Should reject requests with incorrect passwords',function () {
 		return chai.request(app)
 			.post('/api/login')
 			.send({ username, password : 'not_a_valid_password' })
 			.then(res => {
 				expect(res).to.have.status(401);
-				expect(res.body.message).to.be.equal('Unauthorized');
+				expect(res.body.message).to.be.equal('Incorrect password');
 			});
 	});
 
@@ -123,6 +124,7 @@ describe.only('Noteful API - Login', function () {
 					expect(res.body.message).to.be.equal('Unauthorized');
 				});
 		});
+
 		it('should reject requests with an expired token', function () {
 			const user = { username, fullname };
 			const token = jwt.sign({ user }, JWT_SECRET, { subject: username, expiresIn: -1 });

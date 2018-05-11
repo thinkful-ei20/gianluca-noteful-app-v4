@@ -38,7 +38,7 @@ app.use('/api/users', usersRouter);
 app.use('/api', authRouter);
 
 // Mount authenticated user routes
-app.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
+app.use('/api', passport.authenticate('jwt', { session: false, failWithError: true }));
 
 app.use('/api/notes', notesRouter);
 app.use('/api/folders', foldersRouter);
